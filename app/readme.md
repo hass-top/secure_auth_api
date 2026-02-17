@@ -302,15 +302,23 @@ Request:
     {
         "email": "user@example.com",
         "password": "StrongPassword123"
+        "name": "John Doe"
+        "verificationpassword": "StrongPassword123"
     }
-Response TRUE:
+Response: 
+Success (201 Created):
     {
         "message": "User created"
     }
-Respond FALSE:
-    {
-        no existe for now 
-    }
+Failure (400 Bad Request):
+{
+  "error": "Email already exists"
+}
+{
+  "error": "there are a problem here"
+}
+
+
 
 - POST /auth/login
 
@@ -322,18 +330,39 @@ Request:
 
 Response:
     {
-        "access_token": "xxx",
-        "refresh_token": "yyy",
+        "access_token": "jwt_access_token",
         "token_type": "bearer"
+        "expires_in": 900 
     }
-Security Steps:
-check rate limit || verify password hash || log IP || monitor login attempts || generate access token || generate refresh token
 
 - POST /auth/refresh
 
+Request:
+No request body needed if refresh token is stored securely in a HttpOnly cookie.
+
+The server will read the refresh token from the cookie and issue a new access token.
+{ 
+    "access_token": "jwt_access_token",
+}     
+old one to  be in  the  blocklist 
+
+Response:
+{
+  "access_token": "new_jwt_access_token",
+  "token_type": "bearer",
+  "expires_in": 900
+}
+
 - POST /auth/logout
-    blocklist token 
-    log audit event 
+Request: 
+{
+  "access_token": "jwt_token",
+ 
+}
+Response:
+{
+  "message": "Successfully logged out"
+}
 
 User Endpoints
 
@@ -345,16 +374,20 @@ Response:
   "id": "uuid",
   "email": "user@example.com",
   "roles": ["user"]
+  "created_at": "2026-02-17T10:00:00Z"
 }
 
 - PATCH /users/me
-update profile
+Request:
+{
+  "name": "New Name",
+  "password": "NewStrongPassword123"
+  ....
+}
+Response:
+{
+  "message": "Profile updated"
+}
 
-- GET /admin/users
-
-- POST /admin/roles
-Create new role.
-
-- PATCH /admin/users/{id}/role
-Assign roles.
+all  admin functions operate directly on your database session and are not exposed as HTTP endpoints ,  they mean  i can  only called from internal scripts, background jobs, or a secure admin CLI
 
