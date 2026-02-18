@@ -2,7 +2,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from fastapi import status
-import jwt
+from jose import jwt
+from jose import JWTError
+
 from app.models.config import Settings
 
 settings = Settings()
@@ -10,7 +12,7 @@ settings = Settings()
 class JWTVerificationMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
    
-        if request.url.path in ["/auth/login", "/auth/register"]:
+        if request.url.path in ["/auth/login", "/auth/register", "/docs", "/openapi.json", "/test"  ]:
             return await call_next(request)
 
         auth_header = request.headers.get("Authorization")
@@ -34,7 +36,7 @@ class JWTVerificationMiddleware(BaseHTTPMiddleware):
                 {"detail": "Token expired"},
                 status_code=status.HTTP_401_UNAUTHORIZED
             )
-        except jwt.InvalidTokenError:
+        except JWTError:
             return JSONResponse(
                 {"detail": "Invalid token"},
                 status_code=status.HTTP_401_UNAUTHORIZED
