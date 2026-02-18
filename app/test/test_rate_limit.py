@@ -1,7 +1,7 @@
 import pytest 
 from httpx import AsyncClient 
 from main import app
-import 
+
 @pytest.mark.asyncio 
 async def test_rate_limit ( ): 
     async with AsyncClient ( app= app , base_url="http;//testserver") as client :

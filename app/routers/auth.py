@@ -14,6 +14,7 @@ from  app.auth.hashing import hash_password, verify_password
 from  app.models.user_models import User 
 from  app.models.config import settings
 from app.schemas.user_schema import RegisterUser
+from  app.database.redis_conn import is_revoked  ,  revoke_token 
 #---------------
 #def router 
 router = APIRouter(prefix="/auth" ,  tags = ["auth"])
@@ -78,7 +79,7 @@ def login ( user : dict ,  db:Session = Depends ( get_db)) :
 # POST /auth/refresh
 @router.post("/refresh")
 def refresh (request : Request , db: Session = Depends ( get_db ) ,  refresh_token  : str = Cookie(None)) : 
-    if not refresh_token or  refresh_token in  revoked_tokens : 
+    if not refresh_token or   is_revoked(refresh_token) : 
         raise HTTPException ( status_code = 401 ,  detail="Invalid or expired ")
     try : 
         payload = jwt.decode ( refresh_token ,  settings.SECRET_KEY ,  algorithms=[settings.ALGORITHM])
@@ -88,7 +89,8 @@ def refresh (request : Request , db: Session = Depends ( get_db ) ,  refresh_tok
     except : 
         raise HTTPException ( status_code = 401 , detail ="invalid refreh_token" )
     access_token  =  create_access_token_jwt ( {"sub" : email ,  "roles" : roles })
-    revoked_tokens.Add( refresh_token)
+    revoke_token(refresh_token, expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES*60)
+
     return  { 
         "access_token" : access_token , 
         "token_type" : "bearer" , 
@@ -104,8 +106,22 @@ def refresh (request : Request , db: Session = Depends ( get_db ) ,  refresh_tok
 @router.post("/logout")
 def logout( token: dict ) : 
     the_last_token_alive = token.get ( "access_token") 
-    if the_last_token_alive : 
-        revoked_tokens.add = the_last_token_alive 
+    if not the_last_token_alive:
+        raise HTTPException(status_code=400, detail="No token provided")
+
+    try:
+        payload = jwt.decode(the_last_token_alive, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        
+        expires_in = payload.get("exp", 0) - int(datetime.utcnow().timestamp())
+        if expires_in <= 0:
+            expires_in = 1  
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    if is_revoked(the_last_token_alive):
+        raise HTTPException(status_code=401, detail="Token already revoked")
+
+    revoke_token(the_last_token_alive, expires_in=expires_in)
     return  { "message" : "logged from the  road "}
 #------------
 

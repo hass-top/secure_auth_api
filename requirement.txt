@@ -4,23 +4,24 @@ uvicorn[standard]==0.23.2
 
 # Database
 SQLAlchemy==2.0.22
-psycopg2-binary==2.9.9       # For PostgreSQL, or replace with mysqlclient for MySQL
+psycopg2-binary==2.9.9      
 
 # JWT & Security
 python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4       # Password hashing
+passlib[bcrypt]==1.7.4       
 
 # Environment variables
 python-dotenv==1.0.0
 pydantic==2.7.0
-
+pydantic-settings==2.13.0
 # Redis (optional, for revoked tokens or rate limiting)
 redis==5.2.0
 
 # Testing
 pytest==9.0.2
-httpx==0.28.1               # For API testing
+httpx==0.28.1               
 
 # Optional (CORS, Middleware)
-aiofiles==23.2.0             # If serving static files
-python-multipart==0.0.6      # For file uploads
+aiofiles==23.2.0           
+python-multipart==0.0.6      
+typing-inspection==0.4.2 
